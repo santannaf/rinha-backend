@@ -43,7 +43,7 @@ Version number 3 on the save people into database <br>
 [v3_test.pdf](v3_test.pdf)
 
 <p>To run the project you first need to comment the endpoint that you do not want to test within the PessoaController class</p>
-<p>Depois executar o comando:</p>
+<p>Then run the command below:</p>
 
 `docker-compose up -d`
 
