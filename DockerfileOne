@@ -1,0 +1,20 @@
+FROM openjdk:17-jdk-alpine as build
+WORKDIR /workspace/app
+
+COPY gradle gradle
+COPY build.gradle settings.gradle gradlew ./
+COPY src src
+
+RUN chmod 777 ./gradlew
+
+RUN ./gradlew clean build
+
+FROM openjdk:17-jdk-alpine
+VOLUME /tmp
+
+ARG DEPENDENCY=/workspace/app/build/libs
+
+EXPOSE 3000
+
+COPY --from=build ${DEPENDENCY}/*.jar /app.jar
+ENTRYPOINT java -jar /app.jar

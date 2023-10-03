@@ -1,0 +1,113 @@
+version: '3.5'
+services:
+  nginx: # Load Balancer
+    image: docker.io/nginx:latest
+    container_name: nginx
+    command: [ "nginx", "-g", "daemon off;" ]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api1
+      - api2
+    expose:
+      - 9999
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300MB
+
+  api1:
+    build:
+      context: .
+      dockerfile: DockerfileOne
+    hostname: api1
+    container_name: api1
+    environment:
+      - SERVER_PORT=3000
+      - DATABASE_URL=r2dbc:postgres://localhost:5432/rinha
+      - DATABASE_POOL_CONNECTIONS=15
+    depends_on:
+      - postgres
+    expose:
+      - 3000
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.45'
+          memory: 500MB
+    network_mode: host
+
+  api2:
+    build:
+      context: .
+      dockerfile: DockerfileTwo
+    hostname: api2
+    container_name: api2
+    environment:
+      - SERVER_PORT=3001
+      - DATABASE_URL=r2dbc:postgres://localhost:5432/rinha
+      - DATABASE_POOL_CONNECTIONS=15
+    depends_on:
+      - postgres
+    expose:
+      - 3001
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.45'
+          memory: 500MB
+    network_mode: host
+
+  postgres: # Banco de dados
+    image: postgres:latest
+    hostname: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: rinha
+      POSTGRES_PASSWORD: rinha
+      POSTGRES_DB: rinha
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
+    command: postgres -c config_file=/docker-entrypoint-initdb.d/postgresql.conf
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.35'
+          memory: 1400MB
+
+  redis:
+    image: docker.io/redis:latest
+    hostname: redis
+    container_name: redis
+    command: redis-server --save "" --appendonly no --maxclients 20000
+    network_mode: host
+    expose:
+      - 6379
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 100MB
