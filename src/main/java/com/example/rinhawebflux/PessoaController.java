@@ -74,7 +74,7 @@ public class PessoaController {
         final UUID id = request.getId();
 
         return this.cache.salvarCacheV2(request)
-                .doOnNext(next -> this.publisher.onReceiveRequestV1(request)) //EMITIR EVENTO
+                .doOnNext(next -> this.publisher.onReceiveRequestV1(request))
                 .subscribeOn(Schedulers.boundedElastic())
                 .thenReturn(ResponseEntity.created(
                                         componentsBuilder

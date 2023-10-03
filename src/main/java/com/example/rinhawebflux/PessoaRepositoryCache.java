@@ -27,7 +27,7 @@ public class PessoaRepositoryCache implements PessoaDatabaseCache {
     @Override
     public Mono<UUID> salvarCacheV2(Pessoa pessoa) throws JsonProcessingException {
         var json = this.mapper.writeValueAsString(pessoa);
-        return Mono.fromCallable(() -> opsRedis.opsForHash().put("teste", pessoa.getId().toString(), json)
+        return Mono.fromCallable(() -> opsRedis.opsForHash().put("byId", pessoa.getId().toString(), json)
                         .map(s -> pessoa.getId())
                         .block()
                 )
@@ -36,7 +36,7 @@ public class PessoaRepositoryCache implements PessoaDatabaseCache {
 
     @Override
     public Mono<Pessoa> buscarCachePorIdV2(String id) {
-        return Mono.fromCallable(() -> opsRedis.opsForHash().get("teste", id)
+        return Mono.fromCallable(() -> opsRedis.opsForHash().get("byId", id)
                         .<Pessoa>handle((s, sink) -> {
                             Pessoa p;
                             try {
